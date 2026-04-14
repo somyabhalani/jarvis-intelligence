@@ -1,5 +1,7 @@
 <img width="1359" height="1062" alt="Screenshot 2026-04-15 022338" src="https://github.com/user-attachments/assets/c25e8cc7-057d-4cf0-a53f-85d2970b21dc" />
 <div align="center">
+![WhatsApp Image 2026-04-15 at 2 24 44 AM](https://github.com/user-attachments/assets/27714f74-5133-430b-b606-fdaaacc4ef98)
+
 
 # ⚡ JARVIS AI
 
