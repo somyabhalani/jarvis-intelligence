@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jarvis Tactical Web HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="grid-overlay"></div>
+  <div class="vignette"></div>
+  <div class="noise"></div>
+  <div class="scanline"></div>
+
+  <!-- Hidden camera for detection -->
+  <video id="cameraFeed" style="display: none;"></video>
+
+  <header class="top-strip">
+    <div class="chip">JARVIS CORE // ONLINE</div>
+    <div class="chip" id="uptimeChip">UPTIME 00:00:00</div>
+    <div class="chip">THREAT LVL: LOW</div>
+    <div class="chip pulse-chip">NEURAL SYNC 99.2%</div>
+  </header>
+
+  <div class="corner-tag corner-lt">TACTICAL MODE</div>
+  <div class="corner-tag corner-rt">NVIDIA MESH LINK</div>
+
+  <main class="hud-grid">
+    <section class="left-rail panel">
+      <div class="clock-card card">
+        <div class="orb-stage">
+          <div class="voice-particle-field" id="voiceParticleField" data-mode="idle" aria-hidden="true"></div>
+        </div>
+        <div class="time-wrap">
+          <h1 id="timeNow">10:10:10</h1>
+          <p class="clock-stamp"><span id="dayName">THURSDAY</span> | <span id="monthDay">APRIL 10</span></p>
+        </div>
+        <div class="market-mini">
+          <p class="label">CRYPTO + NSE/BSE</p>
+          <p class="market-status" id="marketStatus">Fetching market pulse...</p>
+          <ul class="market-list" id="marketList"></ul>
+        </div>
+      </div>
+
+      <div class="stat card">
+        <p class="label">FULL CAPACITY</p>
+        <div class="meter"><span style="width: 93%"></span></div>
+      </div>
+
+      <div class="stat card">
+        <p class="label">FREE CAPACITY</p>
+        <div class="meter"><span style="width: 34%"></span></div>
+      </div>
+
+      <div class="power-gauge card">
+        <div class="gauge-ring">
+          <span id="powerPct">100%</span>
+        </div>
+        <p>Power High</p>
+      </div>
+
+      <div class="comms card">
+        <p class="label">COMMUNICATION</p>
+        <svg class="circuit-board" viewBox="0 0 160 100" width="160" height="100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Complex interconnected pathways -->
+          <!-- Upper tier -->
+          <line x1="10" y1="20" x2="40" y2="20" class="circuit-line" />
+          <line x1="40" y1="20" x2="60" y2="35" class="circuit-line" />
+          <line x1="60" y1="35" x2="80" y2="30" class="circuit-line" />
+          <line x1="80" y1="30" x2="110" y2="20" class="circuit-line" />
+          <line x1="110" y1="20" x2="150" y2="20" class="circuit-line" />
+          
+          <!-- Middle tier - complex routing -->
+          <line x1="5" y1="40" x2="35" y2="40" class="circuit-line" />
+          <line x1="35" y1="40" x2="50" y2="50" class="circuit-line" />
+          <line x1="50" y1="50" x2="80" y2="50" class="circuit-line" />
+          <line x1="80" y1="50" x2="120" y2="40" class="circuit-line" />
+          <line x1="120" y1="40" x2="155" y2="40" class="circuit-line" />
+          
+          <!-- Lower tier -->
+          <line x1="15" y1="65" x2="45" y2="65" class="circuit-line" />
+          <line x1="45" y1="65" x2="70" y2="75" class="circuit-line" />
+          <line x1="70" y1="75" x2="100" y2="70" class="circuit-line" />
+          <line x1="100" y1="70" x2="140" y2="65" class="circuit-line" />
+          
+          <!-- Central CPU core -->
+          <rect x="70" y="42" width="20" height="16" class="cpu-core" />
+          
+          <!-- Vertical connections from CPU -->
+          <line x1="80" y1="30" x2="80" y2="42" class="circuit-line" />
+          <line x1="80" y1="58" x2="80" y2="75" class="circuit-line" />
+          <line x1="70" y1="50" x2="50" y2="50" class="circuit-line" />
+          <line x1="90" y1="50" x2="120" y2="40" class="circuit-line" />
+          
+          <!-- Diagonal connections -->
+          <line x1="40" y1="20" x2="35" y2="40" class="circuit-line" opacity="0.5" />
+          <line x1="110" y1="20" x2="120" y2="40" class="circuit-line" opacity="0.5" />
+          <line x1="60" y1="35" x2="45" y2="65" class="circuit-line" opacity="0.5" />
+          
+          <!-- Multiple nodes across circuit -->
+          <circle cx="10" cy="20" r="1.5" class="node pulse-node" />
+          <circle cx="40" cy="20" r="1.5" class="node pulse-node" />
+          <circle cx="60" cy="35" r="1.5" class="node pulse-node" />
+          <circle cx="80" cy="30" r="1.5" class="node pulse-node" />
+          <circle cx="110" cy="20" r="1.5" class="node pulse-node" />
+          <circle cx="150" cy="20" r="1.5" class="node pulse-node" />
+          
+          <circle cx="5" cy="40" r="1.5" class="node pulse-node" />
+          <circle cx="35" cy="40" r="1.5" class="node pulse-node" />
+          <circle cx="50" cy="50" r="1.5" class="node pulse-node" />
+          <circle cx="80" cy="50" r="1.5" class="node pulse-node" />
+          <circle cx="120" cy="40" r="1.5" class="node pulse-node" />
+          <circle cx="155" cy="40" r="1.5" class="node pulse-node" />
+          
+          <circle cx="15" cy="65" r="1.5" class="node pulse-node" />
+          <circle cx="45" cy="65" r="1.5" class="node pulse-node" />
+          <circle cx="70" cy="75" r="1.5" class="node pulse-node" />
+          <circle cx="100" cy="70" r="1.5" class="node pulse-node" />
+          <circle cx="140" cy="65" r="1.5" class="node pulse-node" />
+          
+          <!-- Animated glow pulse from core -->
+          <circle cx="80" cy="50" r="10" class="glow-pulse" />
+        </svg>
+        <div class="mood-display" id="moodDisplay">
+          <span class="mood-emoji mood-neutral" id="moodEmoji">◉</span>
+          <div class="mood-text-wrap">
+            <span class="mood-label" id="moodLabel">ANALYZING</span>
+            <span class="mood-meta" id="moodMeta">Camera warming up</span>
+          </div>
+        </div>
+        <div class="comms-controls">
+          <button type="button" class="comms-btn" id="cameraToggleBtn">CAMERA: ON</button>
+          <button type="button" class="comms-btn" id="moodSummaryBtn">SUMMARIZE MOOD</button>
+        </div>
+        <div class="cam-status" id="camStatusText">Live scan every 20s</div>
+        <div class="detected-objects" id="detectedObjects"></div>
+        <div class="object-detail" id="objectDetail">Object detail: waiting for frame analysis</div>
+        <div class="comms-learning" id="commsLearning">Learning: ON</div>
+      </div>
+    </section>
+
+    <section class="center-core panel">
+      <header class="center-head">
+        <h1>JARVIS TACTICAL INTERFACE</h1>
+        <p>Neural command mesh // animated response shell</p>
+        <div class="command-ribbon">
+          <span>VOICE READY</span>
+          <span>ROUTER ACTIVE</span>
+          <span>FAST PATH ENABLED</span>
+          <span>SYSTEM STABLE</span>
+        </div>
+      </header>
+
+      <div class="radar-shell">
+        <div class="ring ring-outer"></div>
+        <div class="ring ring-mid"></div>
+        <div class="ring ring-inner"></div>
+
+        <div class="ring marks marks-1"></div>
+        <div class="ring marks marks-2"></div>
+
+        <div class="orbit orbit-a"><span></span></div>
+        <div class="orbit orbit-b"><span></span></div>
+
+        <div class="core-wave" id="coreWave"></div>
+        <div class="core-center">
+          <span class="tiny">SYS</span>
+          <strong id="coreIndex">2</strong>
+          <span class="tiny">ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="bottom-console">
+        <div class="slot">CPU</div>
+        <div class="slot">MEM</div>
+        <div class="slot">NET</div>
+        <div class="slot">AUDIO</div>
+        <div class="slot">I/O</div>
+        <div class="slot">MODEL</div>
+        <div class="slot">ROUTE</div>
+      </div>
+
+      <section class="command-deck panel-lite">
+        <div class="deck-head">
+          <h3>COMMAND CONSOLE</h3>
+          <span id="statusDot" class="status-dot"></span>
+        </div>
+        <div class="control-row">
+          <button id="modeTypeBtn" type="button" class="mode-btn active">TYPE</button>
+          <button id="listenBtn" type="button" class="mode-btn">LISTEN MODE</button>
+          <button id="ttsToggleBtn" type="button" class="mode-btn active">VOICE OUT: ON</button>
+          <button id="ttsStopBtn" type="button" class="mode-btn">STOP VOICE</button>
+          <span class="meta-chip" id="wakePhraseChip">WAKE: OPTIONAL</span>
+          <span class="meta-chip" id="hotkeyChip">HOTKEY: CTRL+SPACE</span>
+          <span class="meta-chip" id="micStateChip">MIC: IDLE</span>
+        </div>
+        <div id="commandLog" class="command-log"></div>
+        <form id="commandForm" class="command-form">
+          <div class="command-input-row">
+            <input id="commandInput" type="text" placeholder="Type command: research AI trends" autocomplete="off" />
+            <button type="submit">EXEC</button>
+          </div>
+        </form>
+      </section>
+    </section>
+
+    <section class="right-rail panel">
+      <div class="system-node card">
+        <div class="node-ring">
+          <div class="node-core"></div>
+        </div>
+        <ul class="resource-list" id="resourceList">
+          <li>Documents</li>
+          <li>Videos</li>
+          <li>Music</li>
+          <li>Programs</li>
+          <li>Downloads</li>
+          <li>Images</li>
+          <li>Gmail</li>
+          <li>Wikipedia</li>
+          <li>YouTube</li>
+        </ul>
+      </div>
+
+      <div class="weather card">
+        <p class="label" id="weatherLabel">LOCATING WEATHER</p>
+        <div class="temp-ring">
+          <span id="tempVal">--°</span>
+        </div>
+        <p class="weather-location" id="weatherLocation">Detecting location...</p>
+        <p class="weather-forecast" id="weatherForecast">Forecast loading...</p>
+      </div>
+
+      <div class="analysis card">
+        <p class="label">CITY LIVE UPDATES</p>
+        <div class="bars" id="bars"></div>
+        <p class="news-status" id="cityNewsStatus">Fetching city updates...</p>
+        <ul class="city-news-list" id="cityNewsList"></ul>
+      </div>
+
+      <div class="analysis card">
+        <p class="label">GLOBAL NEWS</p>
+        <div class="bars" id="globalBars"></div>
+        <p class="news-status" id="globalNewsStatus">Trending worldwide...</p>
+        <ul class="city-news-list" id="globalNewsList"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js?v=20260413e"></script>
+</body>
+</html>
