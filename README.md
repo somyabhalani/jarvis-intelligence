@@ -615,10 +615,10 @@ Jarvis loads config from `~/.jarvis/config.json` (auto-created on first run).
 
 <div align="center">
 
-**Built with 🔥 by Somya Bhalani**
+**Built by Somya Bhalani💀**
 
 *"Sometimes you gotta run before you can walk."*
 
 </div>
 <img width="618" height="1079" alt="Screenshot 2026-04-15 022836" src="https://github.com/user-attachments/assets/fc9d591f-cc86-43e8-9d02-a7aeb2d1d608" />
-<div align="center">
+
