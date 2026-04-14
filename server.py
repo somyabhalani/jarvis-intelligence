@@ -1,4 +1,5 @@
 import json
+import feedparser
 import math
 import platform
 import random
@@ -779,95 +780,146 @@ class JarvisRuntime:
                 return city
         return "India"
 
-    def city_news(self, city: str = "") -> Dict[str, Any]:
-        target_city = (city or "").strip() or self._infer_city_for_news()
+    _city_news_cache = {}
+    _city_news_lock = threading.Lock()
+
+    # Mapping of city names to Times of India RSS feed codes
+    _toi_city_rss = {
+        "mumbai": "-2128838584",
+        "delhi": "-2128838594",
+        "bangalore": "-2128833038",
+        "bengaluru": "-2128833038",
+        "hyderabad": "-2128816011",
+        "ahmedabad": "-2128838215",
+        "chennai": "-2128834400",
+        "kolkata": "-2128830821",
+        "pune": "-2128821991",
+        "jaipur": "-2128837754",
+        "lucknow": "-2128837163",
+        "kanpur": "-2128843683",
+        "nagpur": "-2128838597",
+        "vadodara": "-2128838597",
+        "surat": "-2128821153",
+        "patna": "-2128821738",
+        "bhopal": "-2128817663",
+        "indore": "-2128831681",
+        "chandigarh": "-2128816762",
+        "agra": "-2128815552",
+        "varanasi": "-2128820891",
+        "rajkot": "-2128823662",
+        "ranchi": "-2128825702",
+        "coimbatore": "-2128822721",
+        "thiruvananthapuram": "-2128830415",
+        "kochi": "-2128830192",
+        "bhubaneswar": "-2128819673",
+        "visakhapatnam": "-2128820471",
+        "aurangabad": "-2128820938",
+        "meerut": "-2128820381",
+        "goa": "-3012537560",
+        # Add more as needed
+    }
+
+
+    def _get_google_news_rss_url(self, city: str, state: str = "") -> str:
+        # Compose a Google News RSS query for city and state
+        query = city
+        if state and state.lower() not in city.lower():
+            query += f" {state}"
+        query = query.replace(" ", "+")
+        return f"https://news.google.com/rss/search?q={query}&hl=en-IN&gl=IN&ceid=IN:en"
+
+    def _refresh_city_news(self, city: str, state: str = ""):
         now_utc = datetime.now(timezone.utc)
-
-        # Alternate method: GDELT live news stream (JSON API), then strict age filtering.
-        freshness_hours = 8
-        max_age = timedelta(hours=float(freshness_hours))
-        errors = []
-        seen = set()
-
-        gdelt_query = quote_plus(f'("{target_city}" OR "{target_city} city") sourcecountry:IN')
-        gdelt_url = (
-            "https://api.gdeltproject.org/api/v2/doc/doc"
-            f"?query={gdelt_query}&mode=artlist&format=json&maxrecords=50&timespan=1day"
-        )
-
-        articles = []
+        rss_url = self._get_google_news_rss_url(city, state)
+        all_headlines = []
+        filtered_headlines = []
+        city_lower = city.lower()
         try:
-            req = urllib.request.Request(gdelt_url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode("utf-8", errors="ignore"))
-            articles = data.get("articles") or []
+            feed = feedparser.parse(rss_url)
+            for entry in feed.entries[:16]:
+                published = entry.get("published", "")
+                published_dt = now_utc
+                try:
+                    if hasattr(entry, "published_parsed") and entry.published_parsed:
+                        published_dt = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
+                except Exception:
+                    published_dt = now_utc
+                age = now_utc - published_dt
+                age_minutes = int(age.total_seconds() // 60)
+                if age_minutes < 60:
+                    age_label = f"{age_minutes}m ago"
+                else:
+                    age_label = f"{max(1, age_minutes // 60)}h ago"
+                headline = {
+                    "title": entry.title,
+                    "url": entry.link,
+                    "source": entry.get("source", {}).get("title", "Google News"),
+                    "published": published,
+                    "age_minutes": age_minutes,
+                    "age_label": age_label,
+                    "summary": getattr(entry, "summary", "")
+                }
+                all_headlines.append(headline)
+                # Strict filter: only include if city name is in title or summary
+                if city_lower in entry.title.lower() or city_lower in getattr(entry, "summary", "").lower():
+                    filtered_headlines.append(headline)
         except Exception as exc:
-            errors.append(f"gdelt: {exc}")
-
-        headlines = []
-        for item in articles[:80]:
-            title = str(item.get("title") or "").strip()
-            link = str(item.get("url") or "").strip()
-            source = str(item.get("sourceCommonName") or item.get("domain") or "").strip()
-            seen_date = str(item.get("seendate") or "").strip()
-            if not title or not link or not seen_date:
-                continue
-
-            dedupe_key = title.lower()
-            if dedupe_key in seen:
-                continue
-
-            try:
-                published_dt = datetime.strptime(seen_date, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc)
-            except Exception:
-                continue
-
-            age = now_utc - published_dt
-            if age.total_seconds() < 0:
-                age = timedelta(seconds=0)
-            if age > max_age:
-                continue
-
-            age_minutes = int(age.total_seconds() // 60)
-            if age_minutes < 60:
-                age_label = f"{age_minutes}m ago"
-            else:
-                age_label = f"{max(1, age_minutes // 60)}h ago"
-
-            seen.add(dedupe_key)
-            headlines.append({
-                "title": title,
-                "url": link,
-                "source": source,
-                "published": published_dt.strftime("%a, %d %b %Y %H:%M:%S GMT"),
-                "age_minutes": age_minutes,
-                "age_label": age_label,
-            })
-
-        headlines.sort(key=lambda x: x.get("age_minutes") if isinstance(x.get("age_minutes"), int) else 10**9)
-        if headlines:
-            return {
-                "ok": True,
-                "city": target_city,
-                "headlines": headlines[:8],
-                "freshness_window_hours": freshness_hours,
-                "is_fallback": False,
-                "live_mode": True,
-                "provider": "gdelt",
-                "updated_at": now_utc.isoformat(),
+            all_headlines = []
+            filtered_headlines = []
+        # Only show filtered headlines; if none, show a message
+        if filtered_headlines:
+            headlines = filtered_headlines[:8]
+        else:
+            headlines = [{
+                "title": f"No recent local news found for {city}.",
+                "url": "",
+                "source": "Google News",
+                "published": "",
+                "age_minutes": 0,
+                "age_label": "",
+                "summary": ""
+            }]
+        with self._city_news_lock:
+            self._city_news_cache[city_lower] = {
+                "headlines": headlines,
+                "updated_at": now_utc,
             }
 
+    def _ensure_city_news_fresh(self, city: str, state: str = ""):
+        now_utc = datetime.now(timezone.utc)
+        with self._city_news_lock:
+            cache = self._city_news_cache.get(city.lower())
+            updated_at = cache["updated_at"] if cache else None
+            if not updated_at or (now_utc - updated_at).total_seconds() > 60:
+                threading.Thread(target=self._refresh_city_news, args=(city, state), daemon=True).start()
+
+    def city_news(self, city: str = "", state: str = "") -> Dict[str, Any]:
+        # If city not provided, infer it
+        if not city:
+            city = self._infer_city_for_news()
+        # Try to infer state if not provided (from weather/location if available)
+        if not state:
+            # Try to get state from weather/location (very basic, can be improved)
+            weather = self.system_weather()
+            state = ""
+            if weather.get("ok"):
+                loc = str(weather.get("location", ""))
+                if "," in loc:
+                    parts = [p.strip() for p in loc.split(",")]
+                    if len(parts) > 1:
+                        state = parts[-1]
+        self._ensure_city_news_fresh(city, state)
+        with self._city_news_lock:
+            cache = self._city_news_cache.get(city.lower(), {})
+            headlines = cache.get("headlines", [])
+            updated_at = cache.get("updated_at")
         return {
             "ok": True,
-            "city": target_city,
-            "headlines": [],
-            "freshness_window_hours": freshness_hours,
-            "is_fallback": False,
-            "live_mode": True,
-            "provider": "gdelt",
-            "updated_at": now_utc.isoformat(),
-            "warning": "No live local updates found in the last 8 hours.",
-            "details": errors[:3],
+            "city": city,
+            "state": state,
+            "headlines": headlines,
+            "provider": "google_news",
+            "updated_at": updated_at.isoformat() if updated_at else None,
         }
 
     def global_news(self, category: str = "") -> Dict[str, Any]:
@@ -1142,7 +1194,7 @@ class JarvisHandler(SimpleHTTPRequestHandler):
 
 
 def main() -> None:
-    host = os.environ.get("HOST", "0.0.0.0")
+    host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", 8080))
     server = ThreadingHTTPServer((host, port), JarvisHandler)
     print(f"Jarvis webapp running at http://{host}:{port}")
