@@ -1,3 +1,4 @@
+<img width="1359" height="1062" alt="Screenshot 2026-04-15 022338" src="https://github.com/user-attachments/assets/c25e8cc7-057d-4cf0-a53f-85d2970b21dc" />
 <div align="center">
 
 # ⚡ JARVIS AI
