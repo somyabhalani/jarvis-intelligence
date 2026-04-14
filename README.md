@@ -1,6 +1,6 @@
 <img width="1359" height="1062" alt="Screenshot 2026-04-15 022338" src="https://github.com/user-attachments/assets/c25e8cc7-057d-4cf0-a53f-85d2970b21dc" />
 <div align="center">
-<img width="618" height="1079" alt="Screenshot 2026-04-15 022836" src="https://github.com/user-attachments/assets/fc9d591f-cc86-43e8-9d02-a7aeb2d1d608" />
+
 
 
 
@@ -620,3 +620,4 @@ Jarvis loads config from `~/.jarvis/config.json` (auto-created on first run).
 *"Sometimes you gotta run before you can walk."*
 
 </div>
+<img width="618" height="1079" alt="Screenshot 2026-04-15 022836" src="https://github.com/user-attachments/assets/fc9d591f-cc86-43e8-9d02-a7aeb2d1d608" />
